@@ -5,6 +5,7 @@ from logging import getLogger
 import tqdm
 import openai
 import anthropic
+from groq import Groq
 
 import pandas as pd
 from configuration import config
@@ -15,7 +16,7 @@ logger = getLogger(__name__)
 PROMPT = """
 Sentiment Classification Task:
 
-You are an expert sentiment analysis model trained to classify text into one of three sentiment categories: positive, negative, neutral or irrelevant. Your task is to carefully analyze the given text and provide the corresponding sentiment label as an output, following the specified format.
+You are an expert sentiment analysis model trained to classify text into one of four sentiment categories: positive, negative, neutral or irrelevant. Your task is to carefully analyze the given text and provide the corresponding sentiment label as an output, following the specified format.
 
 Instructions:
 
@@ -42,6 +43,7 @@ claude_client = anthropic.Anthropic(
     api_key=ANTHROPIC_API_KEY,
 )
 openai.api_key = config['llm']['OPENAI_API_KEY']
+groq_client = Groq(api_key=config['llm']['GROQ_API_KEY'])
 
 
 def get_claude_response(prompt):
@@ -65,6 +67,27 @@ def get_gpt_response(prompt):
     return response.choices[0].message['content']
 
 
+def get_llama_response(prompt):
+    chat_completion = groq_client.chat.completions.create(
+        #
+        # Required parameters
+        #
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+        model="llama3-8b-8192",
+        temperature=0.5,
+        max_tokens=1024,
+        top_p=1,
+        stop=None,
+        stream=False,
+    )
+    return chat_completion.choices[0].message.content
+
+
 def load_test_data(csv_file_path):
     df = pd.read_csv(csv_file_path)
     new_cols = {df.columns[0]: 'id', df.columns[1]: 'name', df.columns[2]: 'rating', df.columns[3]: 'text'}
@@ -77,6 +100,8 @@ def predict_sentiment(text, mode='claude'):
         response = get_claude_response(PROMPT + text)
     elif mode == 'gpt':
         response = get_gpt_response(PROMPT + text)
+    elif mode == 'llama':
+        response = get_llama_response(PROMPT + text)
     else:
         raise ValueError("Invalid model name. Please choose either 'claude' or 'gpt'.")
 
@@ -84,20 +109,19 @@ def predict_sentiment(text, mode='claude'):
     return result
 
 
-def evaluate_model(data, mode='claude'):
+def evaluate_model(data, mode='llama'):
     logger.info(f"Predicting sentiment using {mode} model...")
     results_path = Path('llm') / f'{mode}_results.json'
     try:
         results = load_json_to_dict(results_path)
     except FileNotFoundError:
         results = []
-
+    # results = []
     condition = False
     for i, row in tqdm.tqdm(data.iterrows(), total=len(data)):
-        if row['id'] == 3469:
-            condition = True
         text = row['text']
-
+        if row['id'] == 5832:
+            condition = True
         if condition:
             result = predict_sentiment(text, mode)
             results.append({'id': row['id'], 'result': result})
@@ -109,5 +133,5 @@ def evaluate_model(data, mode='claude'):
 
 if __name__ == "__main__":
     data = load_test_data(config['general']['path_to_val_csv'])
-    results = evaluate_model(data, mode='gpt')
+    results = evaluate_model(data, mode='llama')
     print()
