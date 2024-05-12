@@ -1,0 +1,6 @@
+def get_f1_score():
+    ...
+
+
+def get_average_inference_time():
+    ...
