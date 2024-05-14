@@ -112,21 +112,21 @@ def predict_sentiment(text, mode='claude'):
 def evaluate_model(data, mode='llama'):
     logger.info(f"Predicting sentiment using {mode} model...")
     results_path = Path('llm') / f'{mode}_results.json'
-    try:
-        results = load_json_to_dict(results_path)
-    except FileNotFoundError:
-        results = []
-    # results = []
-    condition = False
+    # try:
+    #     results = load_json_to_dict(results_path)
+    # except FileNotFoundError:
+    #     results = []
+    results = []
+    # condition = False
     for i, row in tqdm.tqdm(data.iterrows(), total=len(data)):
         text = row['text']
-        if row['id'] == 5832:
-            condition = True
-        if condition:
-            result = predict_sentiment(text, mode)
-            results.append({'id': row['id'], 'result': result})
-            with open(results_path, 'w', encoding='utf8') as f:
-                json.dump(results, f, ensure_ascii=False, indent=4)
+        # if row['id'] == 5832:
+        #     condition = True
+        # if condition:
+        result = predict_sentiment(text, mode)
+        results.append({'id': row['id'], 'result': result})
+        with open(results_path, 'w', encoding='utf8') as f:
+            json.dump(results, f, ensure_ascii=False, indent=4)
 
     return results
 
