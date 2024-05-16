@@ -7,9 +7,8 @@ import openai
 import anthropic
 from groq import Groq
 
-import pandas as pd
 from configuration import config
-from utils import load_json_to_dict
+from utils import load_data
 
 logger = getLogger(__name__)
 
@@ -88,13 +87,6 @@ def get_llama_response(prompt):
     return chat_completion.choices[0].message.content
 
 
-def load_test_data(csv_file_path):
-    df = pd.read_csv(csv_file_path)
-    new_cols = {df.columns[0]: 'id', df.columns[1]: 'name', df.columns[2]: 'rating', df.columns[3]: 'text'}
-    df = df.rename(columns=new_cols)
-    return df
-
-
 def predict_sentiment(text, mode='claude'):
     if mode == 'claude':
         response = get_claude_response(PROMPT + text)
@@ -124,6 +116,6 @@ def evaluate_model(data, mode='llama'):
 
 
 if __name__ == "__main__":
-    data = load_test_data(config['general']['path_to_val_csv'])
+    data = load_data(config['general']['path_to_val_csv'])
     results = evaluate_model(data, mode='llama')
     print()

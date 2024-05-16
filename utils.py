@@ -1,4 +1,6 @@
 import json
+
+import pandas as pd
 import yaml
 
 from sklearn.metrics import f1_score, precision_recall_fscore_support
@@ -36,8 +38,11 @@ def calculate_f1_scores(predictions_json_path, ground_truth_json_path):
     return micro_f1, macro_f1, class_f1_scores
 
 
-def get_average_inference_time():
-    ...
+def load_data(csv_file_path):
+    df = pd.read_csv(csv_file_path)
+    new_cols = {df.columns[0]: 'id', df.columns[1]: 'name', df.columns[2]: 'rating', df.columns[3]: 'text'}
+    df = df.rename(columns=new_cols)
+    return df
 
 
 def load_yaml_to_dict(yaml_file):
