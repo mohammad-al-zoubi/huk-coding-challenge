@@ -34,39 +34,22 @@ class SentimentDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
+        # TODO: Labels should be class indices
         embeddings, labels = self.data[index]
         # Process your data here if needed
         return embeddings, labels
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+path_to_train_data = 'path/to/train/data'
+path_to_eval_data = 'path/to/eval/data'
 
 # Instantiate your model, dataset, and dataloader
 net = LinearClassifier(in_features=768, hidden_dim=64, num_classes=4)
-train_dataset = SentimentDataset(path)
-eval_dataset = SentimentDataset(path)
+train_dataset = SentimentDataset(path_to_train_data)
+eval_dataset = SentimentDataset(path_to_eval_data)
 train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
 eval_loader = DataLoader(eval_dataset, batch_size=8)
-
-def hf_trainer():
-    # Define the training arguments
-    training_args = TrainingArguments(
-        output_dir='./results',  # output directory
-        num_train_epochs=10,  # total number of training epochs
-        per_device_train_batch_size=8,  # batch size per device during training
-        logging_dir='./logs',  # directory for storing logs
-    )
-
-    # Instantiate the Trainer
-    trainer = Trainer(
-        model=model,  # the instantiated 🤗 Transformers model to be trained
-        args=training_args,  # training arguments, defined above
-        train_dataset=train_dataset,  # training dataset
-        eval_dataset=eval_dataset,  # eval dataset
-    )
-
-    # Start the training
-    trainer.train()
 
 
 optimizer = AdamW(net.parameters(), lr=1e-5)
@@ -90,8 +73,9 @@ for epoch in range(5):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        if i % 2000 == 1999:  # print every 2000 mini-batches
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}')
+        if i % 100 == 99:  # print every 100 mini-batches
+            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}')
             running_loss = 0.0
 
+torch.save(net.state_dict(), 'embeddings_classifier/sentiment_classifier.pth')
 print('Finished Training')
