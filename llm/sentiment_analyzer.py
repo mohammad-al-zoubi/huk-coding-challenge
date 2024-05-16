@@ -103,7 +103,7 @@ def predict_sentiment(text, mode='claude'):
     elif mode == 'llama':
         response = get_llama_response(PROMPT + text)
     else:
-        raise ValueError("Invalid model name. Please choose either 'claude' or 'gpt'.")
+        raise ValueError("Invalid model name. Please choose either 'claude', 'gpt' or 'llama'.")
 
     result = json.loads(response)['result']
     return result
@@ -112,17 +112,9 @@ def predict_sentiment(text, mode='claude'):
 def evaluate_model(data, mode='llama'):
     logger.info(f"Predicting sentiment using {mode} model...")
     results_path = Path('llm') / f'{mode}_results.json'
-    # try:
-    #     results = load_json_to_dict(results_path)
-    # except FileNotFoundError:
-    #     results = []
     results = []
-    # condition = False
     for i, row in tqdm.tqdm(data.iterrows(), total=len(data)):
         text = row['text']
-        # if row['id'] == 5832:
-        #     condition = True
-        # if condition:
         result = predict_sentiment(text, mode)
         results.append({'id': row['id'], 'result': result})
         with open(results_path, 'w', encoding='utf8') as f:

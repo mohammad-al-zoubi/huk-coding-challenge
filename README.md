@@ -20,3 +20,5 @@ mode = "claude"
 sentiment = call_predict_endpoint(text, mode)
 print(f"Sentiment: {sentiment}")
 ```
+
+Note: Both for the LLM and the linear classifier prediction a valid API key for Cohere and Anthropic, OpenAI or Groq respectively is required. These need to be set in config.yaml.
