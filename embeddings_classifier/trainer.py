@@ -50,7 +50,6 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
     eval_loader = DataLoader(eval_dataset, batch_size=8)
 
-
     optimizer = AdamW(net.parameters(), lr=5e-4)
     criterion = torch.nn.CrossEntropyLoss()
     best_f1 = 0.0
@@ -94,10 +93,10 @@ if __name__ == '__main__':
                     best_f1 = macro_f1
                     print('Saving best model...')
                     torch.save(net.state_dict(), 'embeddings_classifier/best_sentiment_classifier.pth')
-                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}, eval_loss: {eval_loss:.3f}, macro_f1: {macro_f1:.3f}, micro_f1: {micro_f1:.3f}')
+                print(
+                    f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}, eval_loss: {eval_loss:.3f}, macro_f1: {macro_f1:.3f}, micro_f1: {micro_f1:.3f}')
                 # print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}')
                 running_loss = 0.0
-
 
     torch.save(net.state_dict(), 'embeddings_classifier/sentiment_classifier.pth')
     print('Finished Training')

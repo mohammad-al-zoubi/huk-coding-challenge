@@ -5,9 +5,16 @@ inference_times = {
     'linear classifier': 0.001
 }
 
-f1_scores = {
-    'gpt': 0.85,
-    'claude': 0.87,
-    'llama': 0.91,
-    'linear classifier': 0.89
+micro_f1_scores = {
+    'gpt': 0.49,
+    'claude': 0.46,
+    'llama': 0.48,
+    'linear classifier': 0.64
+}
+
+macro_f1_scores = {
+    'gpt': 0.4,
+    'claude': 0.42,
+    'llama': 0.39,
+    'linear classifier': 0.61
 }

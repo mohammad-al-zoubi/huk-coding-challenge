@@ -62,9 +62,20 @@ def load_json_to_dict(json_file):
     return data
 
 
+def convert_dataframe_to_json(csv_file_path):
+    data = load_data(csv_file_path)
+    data_dicts = []
+    classes = {v: k for k, v in CLASSES_DICT.items()}
+    for i, row in data.iterrows():
+        data_dict = {'id': row['id'], 'result': classes[row['rating']]}
+        data_dicts.append(data_dict)
+    with open('data/ground_truths.json', 'w', encoding='utf8') as f:
+        json.dump(data_dicts, f, ensure_ascii=False, indent=4)
+
+
 if __name__ == '__main__':
-    predictions_json_path = 'llm/claude_results.json'
-    ground_truth_json_path = 'llm/gpt_results.json'
+    predictions_json_path = 'llm/llama_results.json'
+    ground_truth_json_path = 'data/ground_truths.json'
 
     micro_f1, macro_f1, class_f1_scores = calculate_f1_scores_from_json(predictions_json_path, ground_truth_json_path)
 
