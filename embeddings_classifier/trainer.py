@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from torch.optim import AdamW
 from torch.utils.data import DataLoader, Dataset
-from transformers import TrainingArguments, Trainer
+from utils import load_json_to_dict, calculate_f1_scores
 
 
 class LinearClassifier(nn.Module):
@@ -25,57 +25,79 @@ class LinearClassifier(nn.Module):
         return out
 
 
-# TODO: Implement
 class SentimentDataset(Dataset):
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, path_to_data):
+        self.data = load_json_to_dict(path_to_data)
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
-        # TODO: Labels should be class indices
-        embeddings, labels = self.data[index]
-        # Process your data here if needed
-        return embeddings, labels
+        embeddings = torch.tensor(self.data[index]['embeddings'])
+        label = self.data[index]['label']
+        return embeddings, torch.tensor(label)
 
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-path_to_train_data = 'path/to/train/data'
-path_to_eval_data = 'path/to/eval/data'
+if __name__ == '__main__':
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    path_to_train_data = 'data/embeddings_training_with_labels.json'
+    path_to_eval_data = 'data/embeddings_validation_with_labels.json'
 
-# Instantiate your model, dataset, and dataloader
-net = LinearClassifier(in_features=768, hidden_dim=64, num_classes=4)
-train_dataset = SentimentDataset(path_to_train_data)
-eval_dataset = SentimentDataset(path_to_eval_data)
-train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
-eval_loader = DataLoader(eval_dataset, batch_size=8)
+    # Instantiate your model, dataset, and dataloader
+    net = LinearClassifier(in_features=1024, hidden_dim=512, num_classes=4)
+    train_dataset = SentimentDataset(path_to_train_data)
+    eval_dataset = SentimentDataset(path_to_eval_data)
+    train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
+    eval_loader = DataLoader(eval_dataset, batch_size=8)
 
 
-optimizer = AdamW(net.parameters(), lr=1e-5)
-criterion = torch.nn.CrossEntropyLoss()
+    optimizer = AdamW(net.parameters(), lr=5e-4)
+    criterion = torch.nn.CrossEntropyLoss()
+    best_f1 = 0.0
 
-for epoch in range(5):  # loop over the dataset multiple times
+    for epoch in range(20):  # loop over the dataset multiple times
 
-    running_loss = 0.0
-    for i, data in enumerate(train_loader, 0):
-        # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = data
+        running_loss = 0.0
+        for i, data in enumerate(train_loader, 0):
+            net.train()
+            # get the inputs; data is a list of [inputs, labels]
+            inputs, labels = data
 
-        # zero the parameter gradients
-        optimizer.zero_grad()
+            # zero the parameter gradients
+            optimizer.zero_grad()
 
-        # forward + backward + optimize
-        outputs = net(inputs)
-        loss = criterion(outputs, labels)
-        loss.backward()
-        optimizer.step()
+            # forward + backward + optimize
+            outputs = net(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
 
-        # print statistics
-        running_loss += loss.item()
-        if i % 100 == 99:  # print every 100 mini-batches
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}')
-            running_loss = 0.0
+            # print statistics
+            running_loss += loss.item()
 
-torch.save(net.state_dict(), 'embeddings_classifier/sentiment_classifier.pth')
-print('Finished Training')
+            if i % 100 == 99:  # print every 100 mini-batches
+                # Evaluation
+                net.eval()  # Set the model to evaluation mode
+                eval_loss = 0.0
+                total_labels = torch.empty(0, dtype=torch.long, device=device)
+                total_outputs = torch.empty(0, dtype=torch.long, device=device)
+                for data in eval_loader:
+                    inputs, labels = data
+                    outputs = net(inputs)
+                    total_labels = torch.cat((total_labels, labels.to(device)))
+                    total_outputs = torch.cat((total_outputs, torch.argmax(outputs, dim=1).to(device)))
+                    loss = criterion(outputs, labels)
+                    eval_loss += loss.item() * inputs.size(0)
+                eval_loss /= len(eval_dataset)
+                macro_f1, micro_f1, _ = calculate_f1_scores(total_outputs, total_labels)
+                if macro_f1 > best_f1:
+                    best_f1 = macro_f1
+                    print('Saving best model...')
+                    torch.save(net.state_dict(), 'embeddings_classifier/best_sentiment_classifier.pth')
+                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}, eval_loss: {eval_loss:.3f}, macro_f1: {macro_f1:.3f}, micro_f1: {micro_f1:.3f}')
+                # print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 100:.3f}')
+                running_loss = 0.0
+
+
+    torch.save(net.state_dict(), 'embeddings_classifier/sentiment_classifier.pth')
+    print('Finished Training')

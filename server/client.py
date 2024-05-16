@@ -14,6 +14,6 @@ def call_predict_endpoint(text, mode='claude', host='localhost', port=8000):
 
 if __name__ == "__main__":
     text = "This is a great movie!"
-    mode = "claude"
+    mode = "linear"
     sentiment = call_predict_endpoint(text, mode)
     print(f"Sentiment: {sentiment}")
