@@ -1,6 +1,6 @@
-import time
+import json
+
 import torch
-from torch import nn
 from embeddings_classifier.trainer import LinearClassifier
 from embeddings_classifier.embeddings_generator import cohere_embeddings
 
@@ -18,8 +18,23 @@ def predict_sentiment(embeddings):
         return predicted.item()
 
 
+def evaluate_validation_set():
+    from utils import load_json_to_dict
+    from tqdm import tqdm
+    data = load_json_to_dict('data/embeddings_validation.json')
+    results = []
+    for item in tqdm(data):
+        embeddings = item['embeddings']
+        sentiment_label = predict_sentiment(torch.tensor(embeddings))
+        results.append({'id': item['id'], 'result': sentiment_label})
+    with open('embeddings_classifier/linear_results.json', 'w', encoding='utf8') as f:
+        json.dump(results, f, ensure_ascii=False, indent=4)
+
+
 if __name__ == '__main__':
-    text = "I hate this product, it's stupid and useless."
-    new_embeddings = cohere_embeddings([text])
-    sentiment_label = predict_sentiment(torch.tensor(new_embeddings[0]))
-    print(f'Predicted sentiment label: {sentiment_label}')
+    # text = "I hate this product, it's stupid and useless."
+    # new_embeddings = cohere_embeddings([text])
+    # sentiment_label = predict_sentiment(torch.tensor(new_embeddings[0]))
+    # print(f'Predicted sentiment label: {sentiment_label}')
+
+    evaluate_validation_set()

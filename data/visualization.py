@@ -18,3 +18,31 @@ macro_f1_scores = {
     'llama': 0.39,
     'linear classifier': 0.61
 }
+
+gpt_class_f1_scores = {
+    'positive': {'f1': 0.61},
+    'neutral': {'f1': 0.11},
+    'irrelevant': {'f1': 0.19},
+    'negative': {'f1': 0.67}
+}
+
+claude_class_f1_scores = {
+    'positive': {'f1': 0.60},
+    'neutral': {'f1': 0.22},
+    'irrelevant': {'f1': 0.21},
+    'negative': {'f1': 0.64}
+}
+
+llama_class_f1_scores = {
+    'positive': {'f1': 0.59},
+    'neutral': {'f1': 0.22},
+    'irrelevant': {'f1': 0.11},
+    'negative': {'f1': 0.64}
+}
+
+linear_class_f1_scores = {
+    'positive': {'f1': 0.67},
+    'neutral': {'f1': 0.59},
+    'irrelevant': {'f1': 0.44},
+    'negative': {'f1': 0.67}
+}

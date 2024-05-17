@@ -74,7 +74,7 @@ def convert_dataframe_to_json(csv_file_path):
 
 
 if __name__ == '__main__':
-    predictions_json_path = 'llm/llama_results.json'
+    predictions_json_path = 'embeddings_classifier/linear_results.json'
     ground_truth_json_path = 'data/ground_truths.json'
 
     micro_f1, macro_f1, class_f1_scores = calculate_f1_scores_from_json(predictions_json_path, ground_truth_json_path)
